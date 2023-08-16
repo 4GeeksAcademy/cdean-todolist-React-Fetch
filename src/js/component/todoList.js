@@ -41,30 +41,48 @@ const TodoList = () => {
 		setAddTask(event.target.value); // captura la tarea que escribe el usuario
 	}
 
-	async function agregar(event) {
+	function agregar(event) {
 		if (event.key === "Enter" && addTask !== "") {
 			const newTask = {
 				label: addTask,
 				done: false
 			}
 			console.log(newTask)
-			update([...todoList, newTask])
+			setTodoList([...todoList, newTask])
 			setAddTask(""); //para limpiar el input
+			update([...todoList, newTask]);
 		} 
 	}
 
-	async function update (newTask) {
+	async function update (todoList) {
 		try {
 			await fetch('https://playground.4geeks.com/apis/fake/todos/user/cd182', {
 			  method: 'PUT',
-			  body: JSON.stringify(newTask),
+			  headers: {"Content-Type": "application/json"},
+			  body: JSON.stringify(todoList),
 			});
 		} catch(error) {
 			console.log(error);
 		}
 	}
 
+	function suprimir(index) {
+		const newList = todoList.filter((item, i) => index !== i);
+		setTodoList(newList)
+		update(newList);
+	}
 
+	async function deleteAll () {
+		try {
+			await fetch('https://playground.4geeks.com/apis/fake/todos/user/cd182', {
+			  method: 'DELETE',
+			  headers: {"Content-Type": "application/json"},
+			});
+			setTodoList([]);
+		} catch(error) {
+			console.log(error);
+		}
+	}
 
 	useEffect(function(){ // onload => ejecutar codigo ni bien cargue el componente
 		crearUsuario()
@@ -79,8 +97,18 @@ const TodoList = () => {
 			<li className="list-group-item">
                 <input className="form-control" value={addTask} onChange={handleInput} onKeyDown={agregar} type="text" placeholder="Escribe la tarea" aria-label="default input example"/>
             </li>
-			{todoList.map((task, index) => <li className="list-group-item" key={index}>{task.label}</li>)}
+			{todoList.map((task, index) => <li className="list-group-item d-flex justify-content-between align-items-center" key={index}>{task.label}
+			<span className="badge rounded-pill" onClick={function() {suprimir(index)}}>X</span>
+			</li>
+			)}
+			<li class="list-group-item">{todoList.length === 0 ? "No hay tareas pendientes, agregar tarea" : todoList.length + " items left"}</li>
+			
 			</ul>
+			{todoList.length === 0 ?
+			<button className="btn btn-danger mx-auto disabled" id="deleteAll">Eliminar todo</button>
+			:
+			<button className="btn btn-danger mx-auto" id="deleteAll" onClick={deleteAll}>Eliminar todo</button>
+			}
 			
 		</div>
     )
